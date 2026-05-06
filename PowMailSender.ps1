@@ -31,20 +31,20 @@ try {
 
 	$configPath = Join-Path -Path $PSScriptRoot -ChildPath 'config.ps1'
 	if (-not (Test-Path -LiteralPath $configPath)) {
-		throw "Ficheiro de configuração não encontrado: $configPath"
+		throw "Ficheiro de configuracao nao encontrado: $configPath"
 	}
 
-	Write-Host "[PowMailSender] A carregar configuração..."
+	Write-Host "[PowMailSender] A carregar configuracao..."
 	$configScriptText = Get-FileTextUtf8 -Path $configPath
 	$configScriptBlock = [ScriptBlock]::Create($configScriptText)
 	. $configScriptBlock
 
 	if (-not $Config) {
-		throw 'A variável $Config não foi encontrada em config.ps1'
+		throw 'A variavel $Config nao foi encontrada em config.ps1'
 	}
 
 	if (-not $Config.ContainsKey($ID)) {
-		throw "ID '$ID' não existe no ficheiro de configuração."
+		throw "ID '$ID' nao existe no ficheiro de configuracao."
 	}
 
 	$job = $Config[$ID]
@@ -62,15 +62,15 @@ try {
 	$smtpUser = if ($job.SMTP_USER) { [string]$job.SMTP_USER } elseif ($SmtpConfig.USER) { [string]$SmtpConfig.USER } else { $null }
 	$smtpPass = if ($job.SMTP_PASS) { [string]$job.SMTP_PASS } elseif ($SmtpConfig.PASS) { [string]$SmtpConfig.PASS } else { $null }
 
-	if ([string]::IsNullOrWhiteSpace($from)) { throw "FROM não definido para ID '$ID'." }
-	if ([string]::IsNullOrWhiteSpace($to)) { throw "TO não definido para ID '$ID'." }
+	if ([string]::IsNullOrWhiteSpace($from)) { throw "FROM nao definido para ID '$ID'." }
+	if ([string]::IsNullOrWhiteSpace($to)) { throw "TO nao definido para ID '$ID'." }
 
 	Write-Host "[PowMailSender] A montar corpo HTML..."
-	$htmlBody = '<html><body><p>Mensagem automática.</p></body></html>'
+	$htmlBody = '<html><body><p>Mensagem automatica.</p></body></html>'
 
 	if (-not [string]::IsNullOrWhiteSpace($templatePath)) {
 		if (-not (Test-Path -LiteralPath $templatePath)) {
-			throw "TEMPLATE_PATH não encontrado: $templatePath"
+			throw "TEMPLATE_PATH nao encontrado: $templatePath"
 		}
 		$htmlBody = Get-FileTextUtf8 -Path $templatePath
 	}
@@ -99,7 +99,7 @@ try {
 		}
 	}
 	elseif (-not [string]::IsNullOrWhiteSpace($anexoPath)) {
-		Write-Host "[PowMailSender] Aviso: ANEXO_PATH não encontrado, a continuar sem anexo."
+		Write-Host "[PowMailSender] Aviso: ANEXO_PATH nao encontrado, a continuar sem anexo."
 	}
 
 	Write-Host "[PowMailSender] A preparar mensagem..."
@@ -132,7 +132,7 @@ try {
 
 	Write-Host "[PowMailSender] A enviar email..."
 	$smtpClient.Send($mailMessage)
-	Write-Host "[PowMailSender] Envio concluído com sucesso."
+	Write-Host "[PowMailSender] Envio concluido com sucesso."
 
 	$mailMessage.Dispose()
 	$smtpClient.Dispose()
