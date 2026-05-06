@@ -1,37 +1,37 @@
 # PowMailSender
 
-Sistema simples em PowerShell para envio de emails HTML por configuracao, com suporte a template, anexo e execucao via Batch/CMD.
+Sistema simples em PowerShell para envio de emails HTML por configuração, com suporte a template, anexo e execução via Batch/CMD.
 
 ## Estrutura do projeto
 
-- `config.ps1`: configuracao global SMTP e perfis de envio por ID.
-- `PowMailSender.ps1`: script executor que le configuracao e envia email.
-- `Send.bat`: exemplo de chamada para uso em batch/agendador.
+- `config.ps1`: configuração global SMTP e perfis de envio por ID.
+- `PowMailSender.ps1`: script executor que lê a configuração e envia email.
+- `Send.cmd`: exemplo de chamada para uso em batch/agendador.
 
 ## Funcionalidades
 
-- Selecao de configuracao por ID (`-ID` obrigatorio).
+- Seleção de configuração por ID (`-ID` obrigatório).
 - Corpo em HTML com template externo (`TEMPLATE_PATH`).
 - Suporte a anexo de ficheiro (`ANEXO_PATH`).
 - Modo especial para `.txt` no corpo:
-  - Se `ANEXO_AS_BODY = $true` e `ANEXO_PATH` for `.txt`, o conteudo do ficheiro e incorporado no email dentro de `<pre>`, preservando quebras de linha.
+  - Se `ANEXO_AS_BODY = $true` e `ANEXO_PATH` for `.txt`, o conteúdo do ficheiro é incorporado no email dentro de `<pre>`, preservando quebras de linha.
 - Leitura de ficheiros em UTF-8.
 - Envio com `SubjectEncoding` e `BodyEncoding` em UTF-8.
 - Logs curtos com `Write-Host` para acompanhar progresso em CMD/Batch.
-- SMTP global sem repeticao:
+- SMTP global sem repetição:
   - Definido uma vez em `$SmtpConfig`.
   - Possibilidade de override por ID (`SMTP_*` no bloco do ID).
-- Autenticacao SMTP opcional:
+- Autenticação SMTP opcional:
   - Se `USER/PASS` existirem, usa credenciais.
-  - Se nao existirem, tenta envio sem autenticacao (util em SMTP interno com relay permitido).
+  - Se não existirem, tenta envio sem autenticação (útil em SMTP interno com relay permitido).
 
 ## Requisitos
 
-- Windows com PowerShell disponivel.
+- Windows com PowerShell disponível.
 - Acesso ao servidor SMTP configurado.
-- Permissoes de relay/autenticacao conforme politica do SMTP.
+- Permissões de relay/autenticação conforme política do SMTP.
 
-## Configuracao
+## Configuração
 
 Editar `config.ps1`.
 
@@ -47,7 +47,7 @@ $SmtpConfig = @{
 }
 ```
 
-Se o teu SMTP interno nao exigir autenticacao, podes remover ou deixar vazio `USER` e `PASS`.
+Se o teu SMTP interno não exigir autenticação ou SSL, podes remover ou deixar vazio `USER` e `PASS` ou `ENABLE_SSL = $false`.
 
 ### 2) Perfis por ID
 
@@ -73,29 +73,52 @@ $Config = @{
 
 Notas:
 
-- `TO` pode ter varios destinatarios separados por `;` ou `,`.
-- `TEMPLATE_PATH` e `ANEXO_PATH` aceitam caminho absoluto ou relativo a pasta do script.
+- `TO` pode ter vários destinatários separados por `;` ou `,`.
+- `TEMPLATE_PATH` e `ANEXO_PATH` aceitam caminho absoluto ou relativo à pasta do script.
+- Placeholder de template: `{{ANEXO_CONTEUDO}}`
+  - Quando `ANEXO_AS_BODY = $true` e `ANEXO_PATH` aponta para um `.txt`, o conteúdo é inserido neste placeholder como HTML seguro dentro de `<pre>`.
+  - Se o placeholder nao existir no template, o script adiciona o conteúdo no fim do corpo com um `<hr/>`.
 
-## How To Usar
+### 3) Exemplo simples de template HTML
 
-### Opcao A: executar direto no PowerShell
+```html
+<!doctype html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <title>Relatorio Diario</title>
+</head>
+<body>
+    <h2>Relatorio Diario</h2>
+    <p>Segue o conteudo processado automaticamente:</p>
+
+    {{ANEXO_CONTEUDO}}
+
+    <p>--<br/>PowMailSender</p>
+</body>
+</html>
+```
+
+## Como Utilizar
+
+### Opção A: executar direto no PowerShell
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\PowMailSender.ps1" -ID "Relatorio_Diario"
 ```
 
-### Opcao B: executar via Batch/CMD
+### Opção B: executar via Batch/CMD
 
-Usar `Send.bat`:
+Usar `Send.cmd`:
 
 ```bat
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0PowMailSender.ps1" -ID "Relatorio_Diario"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "PowMailSender.ps1" -ID "Relatorio_Diario"
 endlocal
 ```
 
-## Fluxo de execucao
+## Fluxo de execução
 
 1. Carrega `config.ps1`.
 2. Procura o bloco do ID recebido.
@@ -104,7 +127,7 @@ endlocal
 5. Processa `ANEXO_PATH`:
    - `.txt` + `ANEXO_AS_BODY = $true`: incorpora no HTML com `<pre>`.
    - caso contrario: adiciona como anexo quando `ANEXO_AS_BODY = $false`.
-6. Envia email e escreve progresso no ecran.
+6. Envia email e escreve progresso no terminal.
 
 ## Mensagens de consola (exemplo)
 
@@ -114,19 +137,19 @@ endlocal
 - `[PowMailSender] A enviar email...`
 - `[PowMailSender] Envio concluido com sucesso.`
 
-## Troubleshooting rapido
+## Troubleshooting rápido
 
 - Erro `ID 'X' nao existe`: confirma se o ID esta definido em `$Config`.
-- Erro de template/anexo nao encontrado: valida caminhos em `TEMPLATE_PATH` e `ANEXO_PATH`.
+- Erro de template/anexo não encontrado: valida caminhos em `TEMPLATE_PATH` e `ANEXO_PATH`.
 - Falha de envio SMTP:
   - confirma `SERVER`, `PORT`, `ENABLE_SSL`.
-  - confirma se requer autenticacao (`USER/PASS`).
-  - para SMTP interno sem autenticacao, valida permissoes de relay para o host onde o script corre.
+  - confirma se requer autenticação (`USER/PASS`).
+  - para SMTP interno sem autenticação, valida permissões de relay para o host onde o script corre.
 - Caracteres estranhos no email:
-  - garantir que ficheiros de template/txt estao em UTF-8.
+  - garantir que ficheiros de template/txt estão em UTF-8.
 
-## Boas praticas
+## Boas práticas
 
-- Nao guardar passwords reais em texto simples em repositorios partilhados.
-- Em producao, preferir obter credenciais de um cofre/secret store.
-- Manter `config.ps1` fora de controlo de versao se tiver dados sensiveis.
+- Não guardar passwords reais em texto simples em repositórios partilhados.
+- Em produção, preferir obter credenciais de um cofre/secret store.
+- Manter `config.ps1` fora de controlo de versão se tiver dados sensíveis.
