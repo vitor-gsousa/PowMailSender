@@ -35,7 +35,9 @@ try {
 	}
 
 	Write-Host "[PowMailSender] A carregar configuração..."
-	. $configPath
+	$configScriptText = Get-FileTextUtf8 -Path $configPath
+	$configScriptBlock = [ScriptBlock]::Create($configScriptText)
+	. $configScriptBlock
 
 	if (-not $Config) {
 		throw 'A variável $Config não foi encontrada em config.ps1'
@@ -82,7 +84,13 @@ try {
 			Write-Host "[PowMailSender] A incorporar TXT no corpo do email..."
 			$txtContent = Get-FileTextUtf8 -Path $anexoPath
 			$safeContent = [System.Net.WebUtility]::HtmlEncode($txtContent)
-			$htmlBody += "`r`n<hr/>`r`n<pre>$safeContent</pre>"
+			$bodyFromTxt = "<pre>$safeContent</pre>"
+			if ($htmlBody.Contains('{{ANEXO_CONTEUDO}}')) {
+				$htmlBody = $htmlBody.Replace('{{ANEXO_CONTEUDO}}', $bodyFromTxt)
+			}
+			else {
+				$htmlBody += "`r`n<hr/>`r`n$bodyFromTxt"
+			}
 		}
 		elseif (-not $anexoAsBody) {
 			Write-Host "[PowMailSender] A adicionar anexo..."
@@ -108,6 +116,7 @@ try {
 	$mailMessage.Subject = $subject
 	$mailMessage.SubjectEncoding = [System.Text.Encoding]::UTF8
 	$mailMessage.BodyEncoding = [System.Text.Encoding]::UTF8
+	$mailMessage.HeadersEncoding = [System.Text.Encoding]::UTF8
 	$mailMessage.IsBodyHtml = $true
 	$mailMessage.Body = $htmlBody
 
