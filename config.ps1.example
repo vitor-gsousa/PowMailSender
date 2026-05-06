@@ -7,7 +7,7 @@ $SmtpConfig = @{
 }
 
 $Config = @{
-    "Relatorio_Diario" = @{
+    "Rlt_Diario" = @{
         FROM          = "teste@empresa.pt"
         TO            = "tecnicos@empresa.pt"
         SUBJECT       = "Relatorio Diario"
