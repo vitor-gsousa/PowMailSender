@@ -1,14 +1,14 @@
 $SmtpConfig = @{
-    SERVER     = "smtp.empresa.pt"
+    SERVER     = "example.com"
     PORT       = 587
-    ENABLE_SSL = $true
-    USER       = "smtp_user"
-    PASS       = "smtp_password"
+    ENABLE_SSL = $false
+    USER       = ""
+    PASS       = ""
 }
 
 $Config = @{
     "Relatorio_Diario" = @{
-        FROM          = "sistema@empresa.pt"
+        FROM          = "teste@empresa.pt"
         TO            = "tecnicos@empresa.pt"
         SUBJECT       = "Relatorio Diario"
         TEMPLATE_PATH = "C:\Scripts\Templates\base.html"
